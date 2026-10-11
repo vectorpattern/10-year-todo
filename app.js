@@ -1,0 +1,77 @@
+import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
+
+const STORAGE_KEY = 'ten-year-todo-v1';
+const state = { tasks: [], sort: 'importance', schedule: null, user: null, remote: false, unsubscribe: null };
+const $ = (id) => document.getElementById(id);
+const els = {
+  today: $('today-label'), subtitle: $('today-subtitle'), month: $('date-month'), day: $('date-day'), weekday: $('date-weekday'), history: $('history-list'),
+  historyCount: $('history-count'), taskCount: $('task-count'), tasks: $('task-list'), form: $('task-form'), title: $('task-title'), importance: $('task-importance'), minutes: $('task-minutes'), sort: $('sort-select'),
+  status: $('sync-status'), dialog: $('settings-dialog'), email: $('email-input'), password: $('password-input'), authMessage: $('auth-message'), authView: $('auth-view'), signedView: $('signed-in-view'), account: $('account-email')
+};
+function importanceColor(value){const ratio=(Math.max(1,Math.min(10,Number(value)))-1)/9;const hue=220*(1-ratio);return `hsl(${hue} 72% 48%)`;}
+function fillImportanceOptions(select){select.innerHTML=Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');}
+fillImportanceOptions(els.importance);
+fillImportanceOptions($('edit-importance'));
+els.importance.value = '5';
+function colorImportanceSelect(select){const update=()=>{select.style.color=importanceColor(select.value);};select.addEventListener('change',update);update();}
+colorImportanceSelect(els.importance);
+colorImportanceSelect($('edit-importance'));
+const now = new Date();
+const keyForDate = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+const todayKey = keyForDate(now);
+const weekday = new Intl.DateTimeFormat('ja-JP',{weekday:'long'}).format(now);
+const clock = document.createElement('time');
+clock.id = 'live-clock';
+clock.className = 'live-clock';
+clock.setAttribute('aria-label', '現在時刻');
+document.getElementById('clock-container').append(clock);
+const updateClock = () => {
+  const current = new Date();
+  clock.dateTime = current.toISOString();
+  clock.textContent = new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(current);
+};
+updateClock();
+setInterval(updateClock, 1000);
+els.month.textContent = `${now.getMonth()+1}月`;
+els.day.textContent = now.getDate();
+els.weekday.textContent = weekday.replace('曜日','');
+
+function readLocal(){ try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); return Array.isArray(data.tasks) ? data.tasks : []; } catch { return []; } }
+function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({tasks: state.tasks})); }
+function setStatus(text, kind=''){ els.status.className = `sync-status ${kind}`; els.status.querySelector('span').textContent=text; }
+function setTasks(tasks){ state.tasks = tasks.filter(t => t && t.id && t.title && t.date).map(t => ({importance:2, minutes:30, done:false, ...t})); saveLocal(); render(); }
+function escapeHTML(value){ return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function displayTasks(){ return state.tasks.filter(t=>t.date===todayKey).sort((a,b)=>Number(a.done)-Number(b.done) || (state.sort==='importance' ? (b.importance-a.importance || a.createdAt-b.createdAt) : state.sort==='time' ? (a.minutes-b.minutes || b.importance-a.importance) : a.createdAt-b.createdAt)); }
+function render(){ renderTasks(); renderHistory(); }
+function formatCompletionTime(value){if(!value)return '';const date=new Date(value);if(Number.isNaN(date.getTime()))return '';return new Intl.DateTimeFormat('ja-JP',{hour:'2-digit',minute:'2-digit',hour12:false}).format(date);}
+function renderTasks(){ const tasks=displayTasks(); els.taskCount.textContent=`${tasks.length}件`; $('clear-schedule').hidden=!state.schedule; $('schedule-summary').hidden=!state.schedule; if(state.schedule)$('schedule-summary').textContent=`${state.schedule.start} 開始 · ${tasks.filter(t=>!t.done).length}件を ${state.schedule.end} までに予定`; if(!tasks.length){els.tasks.innerHTML='<div class="empty-tasks"><span class="empty-symbol">✳</span>タスクを追加して、今日を始めましょう。</div>';return;} let scheduleIndex=0;els.tasks.innerHTML=tasks.map(t=>{const slot=state.schedule&&!t.done?state.schedule.slots[scheduleIndex++]:null;return `<article class="task-item ${t.done?'completed':''}" data-id="${escapeHTML(t.id)}">${slot?`<div class="schedule-time">${slot.start}<span>↓</span>${slot.end}</div>`:''}<button class="check-button" data-action="toggle" aria-label="${t.done?'未完了にする':'完了にする'}">${t.done?'✓':''}</button><div class="task-content"><div class="task-title">${escapeHTML(t.title)}</div><div class="task-meta"><span class="importance-badge" style="--importance-color:${importanceColor(t.importance)}" aria-label="重要度 ${t.importance}/10">${t.importance}</span><span class="task-time">◷ ${t.minutes}分</span>${t.doneAt?`<span class="completion-time">✓ ${formatCompletionTime(t.doneAt)} 完了</span>`:''}</div></div><div class="task-actions"><button class="small-action" data-action="edit" aria-label="編集">✎</button><button class="small-action" data-action="delete" aria-label="削除">×</button></div></article>`;}).join(''); }
+function renderHistory(){ const records={}; for(const t of state.tasks){if(t.date.slice(5)===todayKey.slice(5) && t.date!==todayKey){const year=t.date.slice(0,4);(records[year] ||= []).push(t);}} const years=Object.keys(records).sort((a,b)=>b-a); els.historyCount.textContent=`${years.length}年`; if(!years.length){els.history.innerHTML='<div class="empty-history">この日付の過去の記録は、ここに並びます。</div>';return;} els.history.innerHTML=years.map(year=>{const list=records[year].sort((a,b)=>b.importance-a.importance);const done=list.filter(x=>x.done).length;return `<div class="history-row"><span class="history-year">${year}年</span><div class="history-items">${list.map(t=>`<div class="history-item ${t.done?'done':''}"><span class="importance-badge history-importance" style="--importance-color:${importanceColor(t.importance)}" aria-label="重要度 ${t.importance}/10">${t.importance}</span> ${escapeHTML(t.title)} <span class="task-time">· ${t.minutes}分</span>${t.doneAt?` <span class="completion-time">✓ ${formatCompletionTime(t.doneAt)}完了</span>`:''}</div>`).join('')}</div><span class="history-stat">${done}/${list.length} 完了</span></div>`;}).join(''); }
+function makeId(){ return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`; }
+els.form.addEventListener('submit', async e=>{e.preventDefault();const title=els.title.value.trim(), minutes=els.minutes.value.trim()===''?20:Number(els.minutes.value); if(!title||!Number.isInteger(minutes)||minutes<1||minutes>10080)return;const task={id:makeId(),title,importance:Number(els.importance.value),minutes,done:false,date:todayKey,createdAt:Date.now()};state.tasks.push(task);els.title.value='';els.minutes.value='20';els.importance.value='5';els.importance.dispatchEvent(new Event('change'));await persist();render();els.title.focus();});
+els.sort.addEventListener('change',()=>{state.sort=els.sort.value;renderTasks();});
+const scheduleDialog=$('schedule-dialog');
+function buildSchedule(start){const [hour,minute]=start.split(':').map(Number);let cursor=hour*60+minute;const slots=displayTasks().filter(t=>!t.done).map(t=>{const begin=cursor;cursor+=t.minutes;return {start:`${String(Math.floor(begin/60)%24).padStart(2,'0')}:${String(begin%60).padStart(2,'0')}`,end:`${String(Math.floor(cursor/60)%24).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`};});return {start,end:`${String(Math.floor(cursor/60)%24).padStart(2,'0')}:${String(cursor%60).padStart(2,'0')}`,slots};}
+$('schedule-button').addEventListener('click',()=>{const d=new Date();d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0);$('schedule-start').value=`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;$('schedule-message').textContent='';scheduleDialog.showModal();});
+$('create-schedule').addEventListener('click',()=>{const start=$('schedule-start').value;if(!start){$('schedule-message').textContent='開始時刻を選んでください。';return;}if(!displayTasks().some(t=>!t.done)){$('schedule-message').textContent='スケジュールする未完了タスクがありません。';return;}state.schedule=buildSchedule(start);scheduleDialog.close();renderTasks();});
+$('cancel-schedule').addEventListener('click',()=>scheduleDialog.close());
+$('clear-schedule').addEventListener('click',()=>{state.schedule=null;renderTasks();});
+const editDialog = $('edit-dialog');
+let editingTaskId = null;
+const deleteDialog = $('delete-dialog');
+let deletingTaskId = null;
+els.tasks.addEventListener('click',async e=>{const button=e.target.closest('[data-action]');if(!button)return;const item=button.closest('[data-id]'), task=state.tasks.find(t=>t.id===item?.dataset.id);if(!task)return;switch(button.dataset.action){case'toggle':task.done=!task.done;task.doneAt=task.done?new Date().toISOString():null;await persist();render();break;case'delete':deletingTaskId=task.id;$('delete-task-name').textContent=`「${task.title}」をタスクリストから消去します。この操作は取り消せません。`;deleteDialog.showModal();break;case'edit':editingTaskId=task.id;$('edit-title').value=task.title;$('edit-importance').value=String(Math.max(1,Math.min(10,Number(task.importance)||1)));$('edit-minutes').value=String(task.minutes);$('edit-message').textContent='';editDialog.showModal();$('edit-title').focus();break;}});
+$('confirm-delete').addEventListener('click',async()=>{if(!deletingTaskId)return;state.tasks=state.tasks.filter(t=>t.id!==deletingTaskId);await persist();render();deletingTaskId=null;deleteDialog.close();});
+$('cancel-delete').addEventListener('click',()=>{deletingTaskId=null;deleteDialog.close();});
+$('edit-form').addEventListener('submit',async e=>{e.preventDefault();const task=state.tasks.find(t=>t.id===editingTaskId);if(!task)return;const title=$('edit-title').value.trim(),minutes=Number($('edit-minutes').value),importance=Number($('edit-importance').value);if(!title){$('edit-message').textContent='タスク名を入力してください。';return;}if(!Number.isInteger(minutes)||minutes<1||minutes>10080){$('edit-message').textContent='必要時間は1〜10080分で入力してください。';return;}if(!Number.isInteger(importance)||importance<1||importance>10){$('edit-message').textContent='重要度は1〜10で選んでください。';return;}task.title=title;task.importance=importance;task.minutes=minutes;await persist();render();editDialog.close();editingTaskId=null;});
+$('cancel-edit').addEventListener('click',()=>{editingTaskId=null;editDialog.close();});
+function download(name, type, content){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+$('export-json').addEventListener('click',()=>download(`10年ToDo-${todayKey}.json`,'application/json;charset=utf-8',JSON.stringify({version:1,exportedAt:new Date().toISOString(),tasks:state.tasks},null,2)));
+$('export-csv').addEventListener('click',()=>{const q=v=>`"${String(v).replaceAll('"','""')}"`;const rows=[['日付','タスク','重要度','必要時間(分)','完了'],...state.tasks.map(t=>[t.date,t.title,t.importance,t.minutes,t.done?'完了':'未完了'])];download(`10年ToDo-${todayKey}.csv`,'text/csv;charset=utf-8','\uFEFF'+rows.map(row=>row.map(q).join(',')).join('\r\n'));});
+$('settings-button').addEventListener('click',()=>{els.authMessage.textContent='';els.dialog.showModal();});
+const firebasePromise = isFirebaseConfigured ? Promise.all([import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js'),import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js')]).then(([appMod,authMod,dbMod])=>{const app=appMod.initializeApp(firebaseConfig);return {auth:authMod.getAuth(app),db:dbMod.getFirestore(app),authMod,dbMod};}).catch(err=>{console.error(err);setStatus('同期を利用できません','error');return null;}) : Promise.resolve(null);
+async function persist(){saveLocal();if(!state.remote||!state.user)return;try{const fb=await firebasePromise;await fb.dbMod.setDoc(fb.dbMod.doc(fb.db,'users',state.user.uid,'data','tasks'),{tasks:state.tasks,updatedAt:Date.now()});setStatus('同期済み','online');}catch(err){console.error(err);setStatus('同期エラー','error');}}
+async function connectFirebase(){const fb=await firebasePromise;if(!fb){setStatus('この端末に保存');return;}fb.authMod.onAuthStateChanged(fb.auth,async user=>{state.user=user;els.authView.hidden=!!user;els.signedView.hidden=!user;els.account.textContent=user?.email||'';if(state.unsubscribe)state.unsubscribe();if(!user){state.remote=false;setStatus('この端末に保存');return;}state.remote=true;setStatus('同期中','online');const ref=fb.dbMod.doc(fb.db,'users',user.uid,'data','tasks');state.unsubscribe=fb.dbMod.onSnapshot(ref,snap=>{if(snap.exists()){const remoteTasks=snap.data().tasks||[];const localTasks=readLocal();const localOnly=localTasks.filter(t=>!remoteTasks.some(r=>r.id===t.id));state.tasks=[...remoteTasks,...localOnly];saveLocal();if(localOnly.length)persist();else render();}else{saveLocal();persist();}setStatus('同期済み','online');},err=>{console.error(err);setStatus('同期エラー','error');});});}
+async function authenticate(kind){if(!isFirebaseConfigured){els.authMessage.textContent='Firebase未設定です。firebase-config.js に設定を入力してください。';return;}const fb=await firebasePromise;if(!fb){els.authMessage.textContent='Firebaseに接続できませんでした。';return;}const email=els.email.value.trim(),password=els.password.value;if(!email||password.length<6){els.authMessage.textContent='メールアドレスと6文字以上のパスワードを入力してください。';return;}try{if(kind==='signin')await fb.authMod.signInWithEmailAndPassword(fb.auth,email,password);else await fb.authMod.createUserWithEmailAndPassword(fb.auth,email,password);els.authMessage.textContent='';}catch(err){els.authMessage.textContent=authError(err.code);}}
+function authError(code){return ({'auth/email-already-in-use':'このメールアドレスは登録済みです。','auth/invalid-email':'メールアドレスの形式を確認してください。','auth/weak-password':'パスワードを6文字以上にしてください。','auth/invalid-credential':'メールアドレスまたはパスワードを確認してください。','auth/too-many-requests':'時間をおいてもう一度お試しください。'})[code]||'ログインできませんでした。設定と入力内容を確認してください。';}
+$('signin-button').addEventListener('click',()=>authenticate('signin'));$('signup-button').addEventListener('click',()=>authenticate('signup'));$('signout-button').addEventListener('click',async()=>{const fb=await firebasePromise;if(fb)await fb.authMod.signOut(fb.auth);});
+state.tasks=readLocal();render();connectFirebase();
