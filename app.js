@@ -9,7 +9,7 @@ const els = {
   status: $('sync-status'), dialog: $('settings-dialog'), email: $('email-input'), password: $('password-input'), authMessage: $('auth-message'), authView: $('auth-view'), signedView: $('signed-in-view'), account: $('account-email')
 };
 function importanceColor(value){const ratio=(Math.max(1,Math.min(10,Number(value)))-1)/9;const hue=220*(1-ratio);return `hsl(${hue} 72% 48%)`;}
-function fillImportanceOptions(select){select.innerHTML=Array.from({length:10},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');}
+function fillImportanceOptions(select){select.innerHTML=Array.from({length:10},(_,i)=>{const value=10-i;return `<option value="${value}">${value}</option>`;}).join('');}
 fillImportanceOptions(els.importance);
 fillImportanceOptions($('edit-importance'));
 els.importance.value = '5';

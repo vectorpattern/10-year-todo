@@ -25,7 +25,11 @@
 
     <section class="tasks-panel" aria-labelledby="tasks-title">
       <div class="section-heading"><div><p class="eyebrow">MAKE TODAY COUNT</p><h2 id="tasks-title">今日のタスク</h2></div><span id="task-count" class="count-pill">0件</span></div>
-      <form id="task-form" class="task-form">
+      <div class="list-toolbar"><span class="muted">タスク一覧</span><label class="sort-control">並び替え <select id="sort-select"><option value="importance">重要度順</option><option value="time">必要時間順</option><option value="created">追加順</option></select></label></div>
+      <div class="schedule-toolbar"><button id="schedule-button" class="secondary-button" type="button">◷ スケジュールを作成</button><button id="clear-schedule" class="text-button" type="button" hidden>解除</button></div>
+      <p id="schedule-summary" class="schedule-summary" hidden></p>
+      <div id="task-list" class="task-list"></div>
+      <form id="task-form" class="task-form task-form-bottom">
         <label class="sr-only" for="task-title">タスク名</label>
         <input id="task-title" type="text" maxlength="160" placeholder="今日やることを追加…" autocomplete="off" required>
         <div class="form-row">
@@ -36,10 +40,6 @@
           <button class="add-button" type="submit"><span>＋</span> 追加</button>
         </div>
       </form>
-      <div class="list-toolbar"><span class="muted">タスク一覧</span><label class="sort-control">並び替え <select id="sort-select"><option value="importance">重要度順</option><option value="time">必要時間順</option><option value="created">追加順</option></select></label></div>
-      <div class="schedule-toolbar"><button id="schedule-button" class="secondary-button" type="button">◷ スケジュールを作成</button><button id="clear-schedule" class="text-button" type="button" hidden>解除</button></div>
-      <p id="schedule-summary" class="schedule-summary" hidden></p>
-      <div id="task-list" class="task-list"></div>
       <p class="privacy-note"><span>✦</span> 今日の記録は、今日のまま残ります。</p>
     </section>
 
@@ -92,6 +92,6 @@
     <p class="setup-hint">Firebase未設定の場合は、<code>firebase-config.js</code> にプロジェクト設定を入力してください。</p>
     <form method="dialog" class="dialog-done"><button class="secondary-button">閉じる</button></form>
   </dialog>
-  <script type="module" src="app.js?v=2026-10-12-carryover"></script>
+  <script type="module" src="app.js?v=2026-10-13-form-order"></script>
 </body>
 </html>
