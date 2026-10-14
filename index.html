@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f7f2">
   <title>10年ToDo</title>
-  <link rel="stylesheet" href="styles.css?v=2026-10-14-sticky-toggle">
+  <link rel="stylesheet" href="styles.css?v=2026-10-14-clock-size">
 </head>
 <body>
   <main class="app-shell">
@@ -19,7 +19,7 @@
     </header>
 
     <section class="date-panel">
-      <div class="date-copy"><div class="date-heading"><p class="eyebrow">TODAY</p><label class="sticky-toggle" for="sticky-clock-toggle"><span>固定</span><input id="sticky-clock-toggle" type="checkbox" role="switch" aria-label="時計を画面上部に固定"><i></i></label></div><div id="clock-container" class="clock-container"></div></div>
+      <div class="date-copy"><div class="date-heading"><label class="sticky-toggle" for="sticky-clock-toggle"><span>固定</span><input id="sticky-clock-toggle" type="checkbox" role="switch" aria-label="時計を画面上部に固定"><i></i></label></div><div id="clock-container" class="clock-container"></div></div>
       <div class="date-stamp" aria-label="今日の日付"><span id="date-month"></span><strong id="date-day"></strong><span id="date-weekday"></span></div>
     </section>
 
@@ -97,6 +97,6 @@
     <p class="setup-hint">Firebase未設定の場合は、<code>firebase-config.js</code> にプロジェクト設定を入力してください。</p>
     <form method="dialog" class="dialog-done"><button class="secondary-button">閉じる</button></form>
   </dialog>
-  <script type="module" src="app.js?v=2026-10-14-sticky-toggle"></script>
+  <script type="module" src="app.js?v=2026-10-14-clock-size"></script>
 </body>
 </html>
