@@ -1,6 +1,7 @@
 import { firebaseConfig, isFirebaseConfigured } from './firebase-config.js';
 
 const STORAGE_KEY = 'ten-year-todo-v1';
+const STICKY_CLOCK_KEY = 'ten-year-todo-sticky-clock';
 const state = { tasks: [], sort: 'importance', schedule: null, user: null, remote: false, unsubscribe: null, pendingWrites: 0, writeQueue: Promise.resolve() };
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -39,6 +40,10 @@ setInterval(updateClock, 1000);
 els.month.textContent = `${now.getMonth()+1}月`;
 els.day.textContent = now.getDate();
 els.weekday.textContent = weekday.replace('曜日','');
+const stickyClockToggle = $('sticky-clock-toggle');
+function applyStickyClock(enabled){document.querySelector('.date-panel').classList.toggle('date-panel-sticky',enabled);stickyClockToggle.checked=enabled;localStorage.setItem(STICKY_CLOCK_KEY,enabled?'on':'off');}
+applyStickyClock(localStorage.getItem(STICKY_CLOCK_KEY)!=='off');
+stickyClockToggle.addEventListener('change',()=>applyStickyClock(stickyClockToggle.checked));
 
 function readLocal(){ try { const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); return Array.isArray(data.tasks) ? data.tasks : []; } catch { return []; } }
 function saveLocal(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({tasks: state.tasks})); }
