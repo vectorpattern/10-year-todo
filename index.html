@@ -40,12 +40,17 @@
           <button class="add-button" type="submit"><span>＋</span> 追加</button>
         </div>
       </form>
-      <p class="privacy-note"><span>✦</span> 今日の記録は、今日のまま残ります。</p>
     </section>
 
     <section class="history-panel" aria-labelledby="history-title">
       <div class="section-heading"><div><p class="eyebrow">LOOKING BACK</p><h2 id="history-title">同じ日の記録</h2></div><span id="history-count" class="count-pill">0年</span></div>
       <div id="history-list" class="history-list"></div>
+    </section>
+    <section class="past-records-panel" aria-labelledby="past-records-title">
+      <div class="section-heading"><div><p class="eyebrow">YOUR JOURNEY</p><h2 id="past-records-title">過去の記録</h2></div></div>
+      <div class="calendar-toolbar"><button id="calendar-prev" class="icon-button" type="button" aria-label="前の月">‹</button><h3 id="calendar-month-label"></h3><button id="calendar-next" class="icon-button" type="button" aria-label="次の月">›</button></div>
+      <div class="calendar-grid" id="calendar-grid" aria-label="記録カレンダー"></div>
+      <div id="calendar-records" class="calendar-records" aria-live="polite"></div>
     </section>
     <footer><button id="export-csv" class="text-button" type="button">CSVを書き出す</button><span>あなたのペースで、一日ずつ。</span></footer>
   </main>
@@ -92,6 +97,6 @@
     <p class="setup-hint">Firebase未設定の場合は、<code>firebase-config.js</code> にプロジェクト設定を入力してください。</p>
     <form method="dialog" class="dialog-done"><button class="secondary-button">閉じる</button></form>
   </dialog>
-  <script type="module" src="app.js?v=2026-10-13-form-order"></script>
+  <script type="module" src="app.js?v=2026-10-14-calendar"></script>
 </body>
 </html>
