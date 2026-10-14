@@ -12,4 +12,4 @@
 
 .date-heading{display:flex;align-items:center;gap:14px}.date-heading .eyebrow{margin:0}.sticky-toggle{display:inline-flex;align-items:center;gap:6px;color:#8a9286;font-size:9px;cursor:pointer;user-select:none}.sticky-toggle input{position:absolute;opacity:0;width:1px;height:1px}.sticky-toggle i{position:relative;width:28px;height:16px;border-radius:10px;background:#d9ded6;transition:background .18s}.sticky-toggle i::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:white;box-shadow:0 1px 3px #0002;transition:transform .18s}.sticky-toggle input:checked+i{background:#6f9477}.sticky-toggle input:checked+i::after{transform:translateX(12px)}.sticky-toggle input:focus-visible+i{outline:2px solid #47765c;outline-offset:2px}
 
-.date-heading{justify-content:flex-end}.clock-container{margin-top:0}
+.date-heading{justify-content:flex-start;margin-top:8px}.clock-container{margin-top:0}
