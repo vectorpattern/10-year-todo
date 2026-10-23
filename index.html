@@ -94,9 +94,15 @@
       <div class="dialog-actions"><button id="signin-button" class="add-button" type="button">ログイン</button><button id="signup-button" class="secondary-button" type="button">アカウント作成</button></div>
     </div>
     <div id="signed-in-view" hidden><p id="account-email" class="account-email"></p><button id="signout-button" class="secondary-button" type="button">ログアウト</button></div>
+    <hr>
+    <p class="setting-label">バックアップから読み込む</p>
+    <p class="dialog-description">JSONバックアップの未登録タスクを追加します。今ある記録は消えません。</p>
+    <input id="import-json-file" type="file" accept=".json,application/json" hidden>
+    <button id="import-json" class="secondary-button" type="button">JSONをインポート</button>
+    <p id="import-message" class="auth-message" aria-live="polite"></p>
     <p class="setup-hint">Firebase未設定の場合は、<code>firebase-config.js</code> にプロジェクト設定を入力してください。</p>
     <form method="dialog" class="dialog-done"><button class="secondary-button">閉じる</button></form>
   </dialog>
-  <script type="module" src="app.js?v=2026-10-17-schedule-slots"></script>
+  <script type="module" src="app.js?v=2026-10-23-json-import"></script>
 </body>
 </html>
