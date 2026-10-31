@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f5f7f2">
   <title>10年ToDo</title>
-  <link rel="stylesheet" href="styles.css?v=2026-10-14-toggle-label">
+  <link rel="stylesheet" href="styles.css?v=2026-10-31-tags">
 </head>
 <body>
   <main class="app-shell">
@@ -26,12 +26,14 @@
     <section class="tasks-panel" aria-labelledby="tasks-title">
       <div class="section-heading"><div><p class="eyebrow">MAKE TODAY COUNT</p><h2 id="tasks-title">今日のタスク</h2></div><span id="task-count" class="count-pill">0件</span></div>
       <div class="list-toolbar"><span class="muted">タスク一覧</span><label class="sort-control">並び替え <select id="sort-select"><option value="importance">重要度順</option><option value="time">必要時間順</option><option value="created">追加順</option></select></label></div>
+      <label class="sort-control">タグで絞り込み <select id="tag-filter"><option value="">すべてのタグ</option></select></label>
       <div class="schedule-toolbar"><button id="schedule-button" class="secondary-button" type="button">◷ スケジュールを作成</button><button id="clear-schedule" class="text-button" type="button" hidden>解除</button></div>
       <p id="schedule-summary" class="schedule-summary" hidden></p>
       <div id="task-list" class="task-list"></div>
       <form id="task-form" class="task-form task-form-bottom">
         <label class="sr-only" for="task-title">タスク名</label>
         <input id="task-title" type="text" maxlength="160" placeholder="今日やることを追加…" autocomplete="off" required>
+        <label class="sr-only" for="task-tags">タグ（、区切り）</label><input id="task-tags" type="text" placeholder="タグ：ChatGPT使用、家でやる、スマホでできる">
         <div class="form-row">
           <label class="field-label" for="task-importance">重要度</label>
           <select id="task-importance" aria-label="重要度"></select>
@@ -62,6 +64,7 @@
       <label class="setting-label" for="edit-title">タスク名</label><input id="edit-title" type="text" maxlength="160" required>
       <label class="setting-label" for="edit-importance">重要度（1〜10）</label><select id="edit-importance" class="edit-select"></select>
       <label class="setting-label" for="edit-minutes">必要時間（分）</label><input id="edit-minutes" type="number" min="1" max="10080" step="1" inputmode="numeric" required>
+      <label class="setting-label" for="edit-tags">タグ（、区切り）</label><input id="edit-tags" type="text" placeholder="家でやる、スマホでできる">
       <p id="edit-message" class="auth-message" aria-live="polite"></p>
       <div class="dialog-actions"><button class="add-button" type="submit">変更を保存</button><button id="cancel-edit" class="secondary-button" type="button">キャンセル</button></div>
     </form>
@@ -103,6 +106,6 @@
     <p class="setup-hint">Firebase未設定の場合は、<code>firebase-config.js</code> にプロジェクト設定を入力してください。</p>
     <form method="dialog" class="dialog-done"><button class="secondary-button">閉じる</button></form>
   </dialog>
-  <script type="module" src="app.js?v=2026-10-23-json-import"></script>
+  <script type="module" src="app.js?v=2026-10-31-tags"></script>
 </body>
 </html>
